@@ -1,20 +1,28 @@
 ##############################################################
-#
+# 
 # FillDrops
-# VapourSynth port of FillDrops by johnmeyer
+# 
+# A VapourSynth port of FillDrops by johnmeyer
 # https://forum.doom9.org/showthread.php?p=1775184#post1775184
+# 
 # By Selur and Myrsloik
 # https://forum.doom9.org/showthread.php?p=1947291#post1947291
 # 
-# Last update 2021-07-10
-#
+# Mod by JKyle for StaxRip
+# 
+# Last update 2021-07-11
+# 
 ##############################################################
-#
+# 
+# Requirements:
+# MVTools (https://github.com/dubhater/vapoursynth-mvtools)
+# 
+##############################################################
+# 
 # Syntax:
-# FillDrops(clip, thresh=0.1)
+# filldrops.FillDrops(clip, thresh=0.1)
 #
-# Arguments:
-#
+# Argument:
 # thresh (default=0.1) - Luma Difference Threshold
 #    Lets you specify how different a frame has to be (from the previous frame)
 #    before it's considered not to be a duplicate, and therefore not replaced with a motion interpolated frame.
@@ -24,12 +32,15 @@
 # 
 ##############################################################
 
+import vapoursynth as vs
+
 def FillDrops(clip, thresh=0.1):
+    core = vs.get_core()
     diffclip = core.std.PlaneStats(clip, clip[0] + clip)
-    super = core.mv.Super(clip=clip, pel=2)
-    vfe = core.mv.Analyse(clip=super, truemotion=true, isb=false, delta=1)
-    vbe = core.mv.Analyse(clip=super, truemotion=true, isb=true, delta=1)
-    filldrops = core.mv.FlowInter(clip=clip, super, mvbw=vbe, mvfw=vfe, time=50)
+    super = core.mv.Super(clip, pel=2)
+    vfe = core.mv.Analyse(super, truemotion=True, isb=False, delta=1)
+    vbe = core.mv.Analyse(super, truemotion=True, isb=True, delta=1)
+    filldrops = core.mv.FlowInter(clip, super, mvbw=vbe, mvfw=vfe, time=50)
     def selectFunc(n, f):
         if f.props['PlaneStatsDiff'] < thresh:
             return clip
