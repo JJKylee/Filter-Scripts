@@ -5,6 +5,7 @@
 # https://forum.doom9.org/showthread.php?p=1775184#post1775184
 # By Selur and Myrsloik
 # https://forum.doom9.org/showthread.php?p=1947291#post1947291
+# 
 # Last update 2021-07-10
 #
 ##############################################################
@@ -19,6 +20,7 @@
 #    before it's considered not to be a duplicate, and therefore not replaced with a motion interpolated frame.
 #    If the threshold is too small, some duplicate will not be replaced.
 #    If it's too large, many frames which aren't duplicates (just having very small motions) will be replaced.
+#    (explanation by jagabo on VideoHelp)
 # 
 ##############################################################
 

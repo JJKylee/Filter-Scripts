@@ -14,6 +14,15 @@
 #-------------------
 # MvTools2 (https://github.com/pinterf/mvtools)
 #
+### Arguments ###
+#-----------------
+# thresh (default=0.1) - Luma Difference Threshold
+#    Lets you specify how different a frame has to be (from the previous frame)
+#    before it's considered not to be a duplicate, and therefore not replaced with a motion interpolated frame.
+#    If the threshold is too small, some duplicate will not be replaced.
+#    If it's too large, many frames which aren't duplicates (just having very small motions) will be replaced.
+#    (explanation by jagabo on VideoHelp)
+#
 ### Changelog ###
 #---------------
 # Changed requirements: from MvTools to MvTools2 (johnmeyer)
