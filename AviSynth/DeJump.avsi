@@ -2,21 +2,31 @@
 #
 # DeJump.avsi
 #
-# mod 2021-07-12 by JKyle
+# mod 2021-07-13 by JKyle
 #
 # An AviSynth filter that smooths out jumps and drops
+# preserving the original frame rate
+#
+# Input must be a planar YUV pixel type (HBD supported)
 #
 # - Based on script created by Didée
+#
 # - Modified by John Meyer on June 29, 2011
 # - Further modification by John Meyer on June 8, 2013
 # https://forum.videohelp.com/threads/402416-repair-Videos-with-duplicates-and-dropped-frames#post2625132
 #
-# - Transformed into DeJump filter function by JKyle on July 12, 2021
-#    - parametrized input clip, `jumpthresh`, and `thresh` (for `FillDrops`)
-#    - parametrized `num` and `den` options for `double` via `MFlowFps` to take input clip properties
-#    - removed `ShowMetrics` function needed for test
-#    - removed `FillDrops` function to make use of the externalized function script `FillDrops.avsi` (mod by Selur)
-#    - unglobalized and internalized some variables to be used in `GenerateMask`: `jumpthresh`, `blackframe`, `whiteframe`
+# - Modified by JKyle
+#    - Transformed into `DeJump` filter function (July 12, 2021)
+#        - parametrized input clip, `jumpthresh`, and `thresh` (for `FillDrops`)
+#        - parametrized `num` and `den` options for `double` via `MFlowFps` to take input clip properties
+#        - removed `ShowMetrics` function needed for test
+#        - removed `FillDrops` function to make use of the externalized filter script `FillDrops.avsi` (mod by Selur)
+#        - unglobalized and internalized some variables to be used in `GenerateMask`: `jumpthresh`, `blackframe`, `whiteframe`
+#    - Enabled HBD support (July 13, 2021)
+#        - removed 8-bit conversion of input clip, `ConvertToYV12`, to enable HBD support
+#        - (removed `KillAudio`)
+#        - put input clip pixel type warning
+#        - (changed color names from hex values to preset names)
 #
 ### Requirements ###
 #-------------------
@@ -28,7 +38,7 @@
 ### Arguments ###
 #-----------------
 # jumpthresh (default=0.88) - Threshold for detecting jumps
-#    Increase to catch more jumps.
+#    Increase to catch more jumps
 #    Should always be less than 1.0
 #
 # thresh (default=0.4) - Luma Difference Threshold for FillDrops
@@ -59,10 +69,12 @@ function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
     thresh      = Default(thresh, 0.4)
     showdot     = Default(showdot, false)
 
-    source = c.ConvertToYV12.KillAudio()
-    newnum = c.FrameRateNumerator * 2 # Added for double (JKyle)
-    newden = c.FrameRateDenominator # Added for double (JKyle)
-    blackframe = BlankClip(source, color=$000000)
+    Assert(IsYUV(c)==true && IsPlanar(c)==true, "DeJump supports planar YUV formats only") # input clip pixel type warning (JKyle)
+
+    source = c#.KillAudio # removed `ConvertToYV12` to support HBD, and removed `KillAudio` (JKyle)
+    newnum = source.FrameRateNumerator * 2 # added for `double` (JKyle)
+    newden = source.FrameRateDenominator # added for `double` (JKyle)
+    blackframe = BlankClip(source, color=color_black)
     # removed internalized `whiteframe` (JKyle)
 
     super = showdot ? source.Subtitle("***").MSuper(pel=2) : source.MSuper(pel=2)
@@ -70,19 +82,20 @@ function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
     fvec  = MAnalyse(super, overlap=0, blksize=16, isb=false, search=4, dct=0)
     double = source.MFlowFps(super, bvec, fvec, num=newnum, den=newden, blend=false)
 
-    #Generate a white or black frame, depending on frame difference
+    # generate a white or black frame, depending on frame difference
     bwmask = GenerateMask(source, jumpthresh)
 
-    #Generate the 2x framerate mask needed to choose the motion-estimated frames
+    # generate the 2x framerate mask needed to choose the motion-estimated frames
     themask = Interleave(blackframe, Trim(bwmask, 1, 0))
 
-    #Merge double framerate from original with motion-esimated frames, but only where there are jumps
-    #(i.e., original frames are used except at jump points)
+    # merge double framerate from original with motion-esimated frames, but only where there are jumps
+    # (i.e., original frames are used except at jump points)
     Interleave(source, source).mt_merge(double, themask, luma=true, U=3, V=3)
 
-    #Decimate
+    # decimate part
     RequestLinear
-    decimated = TDecimate(display=false, mode=1, cycleR=10, cycle=20)  #Decimate half of all frames (set to twice the length of "normal" dup/drop cycle)
+    # decimate half of all frames (set to twice the length of "normal" dup/drop cycle)
+    decimated = TDecimate(display=false, mode=1, cycleR=10, cycle=20)
 
     # some repeats are still left after decimation, so fix those as well
     final = FillDrops(decimated, thresh)
@@ -92,16 +105,16 @@ function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
 
 
 #----------------
-#This function returns a white clip whenever a big jump is detected; otherwise a black clip is returned
-#Each YDiff must eliminate Ydiff=0 (duplicate) from moving average
+# This function returns a white clip whenever a big jump is detected; otherwise a black clip is returned
+# Each YDiff must eliminate Ydiff=0 (duplicate) from moving average
 
 # `jumpthresh` argument added for internal use (JKyle)
 
 function GenerateMask (clip c, float jumpthresh)
 {
 
-    blackframe = BlankClip(c, color=$000000) # internalized for GenerateMask (JKyle)
-    whiteframe = BlankClip(c, color=$FFFFFF) # internalized for GenerateMask (JKyle)
+    blackframe = BlankClip(c, color=color_black) # internalized for `GenerateMask` (JKyle)
+    whiteframe = BlankClip(c, color=color_white) # internalized for `GenerateMask` (JKyle)
     mymask = c.ScriptClip("""
     \ (( (YDifferenceFromPrevious(SelectEvery(c, 1, 2)) < 0.3 ? 
     \       YDifferenceFromPrevious(SelectEvery(c, 1, 3))  :
