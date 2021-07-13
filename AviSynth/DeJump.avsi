@@ -1,6 +1,6 @@
 #########################################################################################
 #
-# DeJumps.avsi
+# DeJump.avsi
 #
 # mod 2021-07-12 by JKyle
 #
@@ -11,7 +11,7 @@
 # - Further modification by John Meyer on June 8, 2013
 # https://forum.videohelp.com/threads/402416-repair-Videos-with-duplicates-and-dropped-frames#post2625132
 #
-# - Transformed into DeJumps filter function by JKyle on July 12, 2021
+# - Transformed into DeJump filter function by JKyle on July 12, 2021
 #    - parametrized input clip, `jumpthresh`, and `thresh` (for `FillDrops`)
 #    - parametrized `num` and `den` options for `double` via `MFlowFps` to take input clip properties
 #    - removed `ShowMetrics` function needed for test
@@ -52,7 +52,7 @@
 #########################################################################################
 
 
-function DeJumps (clip c, float "jumpthresh", float "thresh", bool "showdot")
+function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
 {
 
     jumpthresh  = Default(jumpthresh, 0.88)
