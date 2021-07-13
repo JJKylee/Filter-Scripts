@@ -62,7 +62,8 @@ function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
     source = c.ConvertToYV12.KillAudio()
     newnum = c.FrameRateNumerator * 2 # Added for double (JKyle)
     newden = c.FrameRateDenominator # Added for double (JKyle)
-    blackframe = BlankClip(source, color=$000000) # removed internalized whiteframe
+    blackframe = BlankClip(source, color=$000000)
+    # removed internalized `whiteframe` (JKyle)
 
     super = showdot ? source.Subtitle("***").MSuper(pel=2) : source.MSuper(pel=2)
     bvec  = MAnalyse(super, overlap=0, blksize=16, isb=true, search=4, dct=0)
