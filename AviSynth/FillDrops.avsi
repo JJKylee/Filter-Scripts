@@ -2,7 +2,10 @@
 #
 # FillDrops.avsi
 #
-# mod 2021-07-10
+# An AviSynth filter to detect and replace duplicate frames
+# with a motion-interpolation of the adjacent frames.
+#
+# mod 2021-07-10 by Selur
 # 
 # - based on Mug Funky's FillDrops
 # - FillDrops by johnmeyer on Doom9's forum

@@ -2,7 +2,10 @@
 # 
 # FillDrops
 # 
-# A VapourSynth port of FillDrops by johnmeyer
+# A filter to detect and replace duplicate frames
+# with a motion-interpolation of the adjacent frames.
+# 
+# This is a VapourSynth port of FillDrops by johnmeyer
 # https://forum.doom9.org/showthread.php?p=1775184#post1775184
 # 
 # By Selur and Myrsloik
