@@ -2,7 +2,7 @@
 #
 # DeJump.avsi
 #
-# mod 2021-07-13 by JKyle
+# mod 2021-07-14 by JKyle
 #
 # An AviSynth filter that smooths out jumps and drops
 # preserving the original frame rate
@@ -27,6 +27,7 @@
 #        - (removed `KillAudio`)
 #        - put input clip pixel type warning
 #        - (changed color names from hex values to preset names)
+#    - Parametrized decimation cycle (July 14, 2021)
 #
 ### Requirements ###
 #-------------------
@@ -42,6 +43,11 @@
 #    Should always be less than 1.0
 #
 # thresh (default=0.4) - Luma Difference Threshold for FillDrops
+#
+# dcycle (default=20) - decimation cycle
+#     The smallest even number >= dcycle will be used as the decimation cycle for `TDecimate`
+#     Using larger values can help when the drops and dups are widely scattered.
+#     But the larger the values, the slower the script will run.
 #
 # showdot (default=false) - Troubleshooting
 #    true for troubleshooting; otherwise, false
@@ -62,11 +68,12 @@
 #########################################################################################
 
 
-function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
+function DeJump (clip c, float "jumpthresh", float "thresh", int "dcycle", bool "showdot")
 {
 
     jumpthresh  = Default(jumpthresh, 0.88)
     thresh      = Default(thresh, 0.4)
+    dcycle      = Default(dcycle, 20) # decimation cycle is parametrized (JKyle)
     showdot     = Default(showdot, false)
 
     Assert(IsYUV(c)==true && IsPlanar(c)==true, "DeJump supports planar YUV formats only") # input clip pixel type warning (JKyle)
@@ -93,9 +100,11 @@ function DeJump (clip c, float "jumpthresh", float "thresh", bool "showdot")
     Interleave(source, source).mt_merge(double, themask, luma=true, U=3, V=3)
 
     # decimate part
+    dcycle = (dcycle%2==0) ? dcycle : dcycle+1 # assign the smallest even number >= dcycle as the decimation cycle (JKyle)
+    
     RequestLinear
     # decimate half of all frames (set to twice the length of "normal" dup/drop cycle)
-    decimated = TDecimate(display=false, mode=1, cycleR=10, cycle=20)
+    decimated = TDecimate(display=false, mode=1, cycleR=dcycle/2, cycle=dcycle)
 
     # some repeats are still left after decimation, so fix those as well
     final = FillDrops(decimated, thresh)
