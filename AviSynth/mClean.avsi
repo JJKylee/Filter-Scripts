@@ -153,11 +153,13 @@ clean       =  chroma ? ExtractY(clean) : clean
 filt_chroma_bits =  BitsPerComponent(filt_chroma)
 clean2           =  deband==0 ? nop() : ConvertBits(clean, 8)
 noise_diff       =  deband==0 ? nop() : BitsPerComponent(c)==8 ? nop() : mt_makediff(convertbits(clean2, calcbits), clean)
-# Different color formats are returned for `depth_calc` depending on the source chroma subsampling scheme (JKyle)
+
+# Different pixel types are returned for `depth_calc` depending on the source chroma subsampling scheme (JKyle)
 depth_calc       =  deband==0 ? nop() : CombinePlanes (clean2, filt_chroma_bits>8 ? ConvertBits(filt_chroma, 8) : filt_chroma, planes="YUV",
                  \  source_planes="YUV", pixel_type = Is420(c) ? "YV12" : Is422(c) ? "YV16" : "YV24")
 depth_calc       =  deband==0 ? nop() : deband>1 ? deband==4 ? depth_calc : AutoAdjust (depth_calc, auto_gain=true, bright_limit=1.09, dark_limit=1.11,
                  \  gamma_limit=1.045, auto_balance=true, chroma_limit=1.13, chroma_process=115, balance_str=0.85) : depth_calc
+
 # Replaced `f3kdb` with `neo_f3kdb` (JKyle)
 depth_calc       =  deband==0 ? undefined() : deband<>2 ? neo_f3kdb (depth_calc, preset=chroma?"high":"luma", range=16, grainY=38*(defH/540),
                  \  grainC=chroma?37*(defH/540):0) :depth_calc
