@@ -7,8 +7,11 @@
 # - based on Mug Funky's ChubbyRain
 # - ChubbyRain2 by Lothar on Doom9's forum
 # https://forum.doom9.org/showthread.php?p=589885#post589885
-# - updated by Asd-g to support HBD
-# - mod by JKyle
+# - updated to support HBD (Asd-g)
+# - Replaced mt_convolution with GeneralConvolution (Asd-g)
+# - Replaced z_PointResize with PointResize & revived interlaced for use in Bifrost (JKyle)
+# 
+# - mod 2021-07-18 by JKyle
 #
 ### Requirements ###
 #-------------------
@@ -24,6 +27,7 @@
 # Made parameter "interlaced" dummy (Asd-g)
 # Replaced z_PointResize with PointResize (JKyle)
 # Revived "interlaced" for use in Bifrost (JKyle)
+# Replaced mt_convolution with GeneralConvolution for speed up (Asd-g)
 #
 #########################################################################################
 
@@ -37,8 +41,11 @@ function ChubbyRain2(clip c, int "th", int "radius", int "sft", bool "interlaced
     interlaced  = Default(interlaced, false)
     show        = Default(show, false)
     
-    uc = mt_convolution(c, horizontal="1", vertical="1 -2 1", Y=1, U=3, V=3)
-    mt_convolution(c, horizontal="1", vertical="1 2 1", Y=2, U=3, V=3)
+    # uc = mt_convolution(c, horizontal="1", vertical="1 -2 1", Y=1, U=3, V=3)
+    # mt_convolution(c, horizontal="1", vertical="1 2 1", Y=2, U=3, V=3)
+    
+    uc = GeneralConvolution(c, matrix="0 1 0 0 -2 0 0 1 0", luma=false, alpha=false) # mt_convolution replacement
+    GeneralConvolution(c, matrix="0 1 0 0 2 0 0 1 0", luma=false, alpha=false) # mt_convolution replacement
     Bifrost(interlaced=interlaced)
     vsCnr2()
     cc = TemporalSoften(radius, 0, sft, 2, 2)
